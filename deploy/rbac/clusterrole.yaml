@@ -26,11 +26,15 @@ rules:
   - apiGroups: [djkormo.github]
     resources: [projects,projects/status]
     verbs: [list, watch,patch]
-  # for controlling namespace  
+  # for controlling namespace  DO NOT DELETE NAMESPACE
   - apiGroups: [""]
     resources: [namespaces]
     verbs: [list, watch,patch,create]
   # for controlling resourcequotas and limitranges  
   - apiGroups: [""]
-    resources: [resourcequotas]
+    resources: [resourcequotas,limitranges]
+    verbs: [list, watch,patch,create,delete,update]
+  # for controlling networkpolicy
+  - apiGroups: [""]
+    resources: [networkpolicies]
     verbs: [list, watch,patch,create,delete,update]

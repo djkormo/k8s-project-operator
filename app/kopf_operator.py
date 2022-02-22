@@ -149,7 +149,7 @@ def create_resourcequota(kopf,name,meta,spec,logger,api,filename):
   resourcequotaconfigmaps=spec['resourcequota'].get('resourcequotaconfigmaps',1)
   resourcequotapersistentvolumeclaims=spec['resourcequota'].get('resourcequotapersistentvolumeclaims',1)
   resourcequotareplicationcontrollers=spec['resourcequota'].get('resourcequotareplicationcontrollers',1)
-  resourcequotasecrets=spec.spec['resourcequota']('resourcequotasecrets',1)
+  resourcequotasecrets=spec['resourcequota'].get('resourcequotasecrets',1)
   resourcequotaservicesloadbalancers=spec['resourcequota'].get('resourcequotaservicesloadbalancers',1)
 
   text = tmpl.format(name=name,resourcequotarequestscpu=resourcequotarequestscpu,
@@ -227,12 +227,20 @@ def replace_resourcequota(kopf,name,meta,spec,logger,api,filename):
         name=name,
         body=data,
       )
-    kopf.append_owner_reference(obj)
-    #logger.info(f"ResurceQuota child is replaced: {obj}")
+    
   except ApiException as e:
     logger.error("Exception when calling CoreV1Api->replace_namespaced_resource_quota: %s\n" % e)
-  kopf.adopt(data)  
   
+
+def delete_resourcequota(kopf,name,spec,logger,api):
+  try:
+    obj = api.delete_namespaced_resource_quota(
+        namespace=name,
+        name=name
+      )
+    logger.debug(f"LimitRange child is deleted: {obj}")
+  except ApiException as e:
+    logger.error("Exception when calling CoreV1Api->delete_namespaced_resource_quota: %s\n" % e)
 
 
 # create limitrange based on yaml manifest
@@ -244,7 +252,7 @@ def create_limitrange(kopf,name,meta,spec,logger,api,filename):
   # get labels from parrent object 
   labels=meta['labels']
   
-  logger.info(f"Namespace {name} ANNOTATIONS {annotations}\n")    
+  logger.info(f"Namespace {name} limitrange spec: {spec['limitrange']}\n")    
       
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
@@ -275,7 +283,6 @@ def create_limitrange(kopf,name,meta,spec,logger,api,filename):
         body=data,
       )
     kopf.append_owner_reference(obj)
-    #logger.info(f"LimitRange child is created: {obj}")
   except ApiException as e:
     logger.error("Exception when calling CoreV1Api->create_namespaced_limit_range: %s\n" % e)
   kopf.adopt(data)
@@ -288,7 +295,7 @@ def replace_limitrange(kopf,name,meta,spec,logger,api,filename):
   # get labels from parrent object 
   labels=meta['labels']
   
-  logger.info(f"Project {name} ANNOTATIONS {annotations} \n")    
+  logger.info(f"Project {name} limitrange spec: {spec['limitrange']} \n")    
   
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
@@ -319,11 +326,24 @@ def replace_limitrange(kopf,name,meta,spec,logger,api,filename):
         body=data,
       )
     kopf.append_owner_reference(obj)
-    #logger.info(f"LimitRange child is created: {obj}")
+    logger.debug(f"LimitRange child is created: {obj}")
   except ApiException as e:
     logger.error("Exception when calling CoreV1Api->replace_namespaced_limit_range: %s\n" % e)
   kopf.adopt(data)  
   
+# delete limitrange   
+def delete_limitrange(kopf,name,spec,logger,api):
+    
+  try:
+    obj = api.delete_namespaced_limit_range(
+        namespace=name,
+        name=name
+      )
+    logger.debug(f"LimitRange child is deleted: {obj}")
+  except ApiException as e:
+    logger.error("Exception when calling CoreV1Api->delete_namespaced_limit_range: %s\n" % e)
+
+
 # create networkpolicy based on yaml manifest  
 def create_networkpolicy(kopf,name,spec,logger,api,filename):
   path = os.path.join(os.path.dirname(__file__), filename)
@@ -335,7 +355,6 @@ def create_networkpolicy(kopf,name,spec,logger,api,filename):
         namespace=name,
         body=data,
       )
-    #pprint(obj)
     kopf.append_owner_reference(obj)
   except ApiException as e:
     logger.error("Exception when calling NetworkingV1Api->create_namespaced_network_policy: %s\n" % e)
@@ -352,7 +371,6 @@ def replace_networkpolicy(kopf,name,spec,logger,api,filename,policyname):
         name=policyname,
         body=data,
       )
-    #pprint(obj)
     kopf.append_owner_reference(obj)
   except ApiException as e:
     logger.error("Exception when calling NetworkingV1Api->replace_namespaced_network_policy: %s\n" % e)
@@ -401,7 +419,6 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
 
     try: 
       api_response = api.list_namespaced_resource_quota(namespace=name) 
-      #pprint(api_response)
       l_resoucequota=[]
       for i in api_response.items:
         logger.debug("ResourceQuota namespace: %s\t name: %s" %
@@ -415,10 +432,50 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
     else:
       replace_resourcequota(kopf=kopf,name=name,meta=meta,spec=spec,logger=logger,api=api,filename='resourcequota/resourcequota.yaml')
  
-  # create or update limit range
+    # create or update limit range
   
+    api = kubernetes.client.CoreV1Api()
+
+    try: 
+      api_response = api.list_namespaced_limit_range(namespace=name) 
+      l_limitrange=[]
+      for i in api_response.items:
+        logger.debug("Limitrange namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_limitrange.append(i.metadata.name)
+    except ApiException as e:
+      logger.error("Exception when calling CoreV1Api->list_namespaced_limit_range: %s\n" % e)
+
+    if name not in l_limitrange:
+      create_limitrange(kopf=kopf,name=name,meta=meta,spec=spec,logger=logger,api=api,filename='limitrange/limitrange.yaml')
+    else:
+      replace_limitrange(kopf=kopf,name=name,meta=meta,spec=spec,logger=logger,api=api,filename='limitrange/limitrange.yaml')
+
+    api = kubernetes.client.NetworkingV1Api()
+
+    try: 
+      api_response = api.list_namespaced_network_policy(namespace=name) 
+      l_netpol=[]
+      for i in api_response.items:
+        logger.debug("NetworkPolicy namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_netpol.append(i.metadata.name) 
+    except ApiException as e:
+      logger.error("Exception when calling NetworkingV1Api->list_namespaced_network_policy: %s\n" % e)
   
   # create or update networkpolicy
+  
+      api = kubernetes.client.NetworkingV1Api()
+
+    try: 
+      api_response = api.list_namespaced_network_policy(namespace=name) 
+      l_netpol=[]
+      for i in api_response.items:
+        logger.debug("NetworkPolicy namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_netpol.append(i.metadata.name) 
+    except ApiException as e:
+      logger.error("Exception when calling NetworkingV1Api->list_namespaced_network_policy: %s\n" % e)
 
 
 @kopf.on.delete('djkormo.github', 'v1alpha2', 'project')
@@ -427,7 +484,44 @@ def delete_fn(spec, name, status, namespace, logger, **kwargs):
     
     # delete networkpolicy   TODO
     
+    logger.info(f"Deleting network policy: {name}")
+    
     # delete resourcequota  TODO
+    logger.info(f"Deleting resourcequota: {name}")
+    
+    api = kubernetes.client.CoreV1Api()
+
+    try: 
+      api_response = api.list_namespaced_resource_quota(namespace=name) 
+      l_resoucequota=[]
+      for i in api_response.items:
+        logger.debug("ResourceQuota namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_resoucequota.append(i.metadata.name)
+    except ApiException as e:
+      logger.error("Exception when calling CoreV1Api->list_namespaced_resource_quota: %s\n" % e)
+
+    if name in l_resoucequota:
+      delete_resourcequota(kopf=kopf,name=name,spec=spec,logger=logger,api=api)
+
+    
     
     # delete limit range  TODO
     
+    logger.info(f"Deleting limitrange: {name}")
+    
+        # create limitrange 
+    api = kubernetes.client.CoreV1Api()
+
+    try: 
+      api_response = api.list_namespaced_limit_range(namespace=name) 
+      l_limitrange=[]
+      for i in api_response.items:
+        logger.debug("Limitrange namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_limitrange.append(i.metadata.name)
+    except ApiException as e:
+      logger.error("Exception when calling CoreV1Api->list_namespaced_limit_range: %s\n" % e)
+
+    if name in l_limitrange:
+      delete_limitrange(kopf=kopf,name=name,spec=spec,logger=logger,api=api)
