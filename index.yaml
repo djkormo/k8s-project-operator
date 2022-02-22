@@ -1,0 +1,15 @@
+apiVersion: v1
+entries:
+  project-operator:
+  - apiVersion: v2
+    appVersion: 0.0.2
+    created: "2022-02-22T22:07:49.625912164Z"
+    description: Helm Chart for deploying the Project Operator
+    digest: bb80d1c42d03299631e097afcd43db176ca14dfd3b6a1bd22dedb13214283c57
+    icon: https://helm.elastic.co/icons/logstash.png
+    name: project-operator
+    type: application
+    urls:
+    - https://github.com/djkormo/k8s-project-operator/releases/download/project-operator-0.0.2/project-operator-0.0.2.tgz
+    version: 0.0.2
+generated: "2022-02-22T22:07:49.42550817Z"
