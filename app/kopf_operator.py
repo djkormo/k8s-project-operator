@@ -71,7 +71,7 @@ def create_namespace(kopf,name,namespace,meta,spec,logger,api,filename):
 
   labels=meta['labels']
 
-  logger.info(f"Project ANNOTATIONS {annotations} and LABELS {labels}\n")
+  logger.debug(f"Project ANNOTATIONS {annotations} and LABELS {labels}\n")
  
   # Apply annotations to namespace
   try:
@@ -100,7 +100,7 @@ def replace_namespace(kopf,name,namespace,meta,spec,logger,api,filename):
   annotations=meta['annotations']
   # get labels from parent object
   labels=meta['labels'] 
-  logger.info(f"Project ANNOTATIONS {annotations} and LABELS {labels}\n")
+  logger.debug(f"Project ANNOTATIONS {annotations} and LABELS {labels}\n")
  
   # mock data
   #labels = {"owner": "djkormo", "name": "project"}
@@ -108,7 +108,7 @@ def replace_namespace(kopf,name,namespace,meta,spec,logger,api,filename):
   #labels=json.dump(labels)
   #annotations = {"description": "test","confirmation":"yes"}
   
-  logger.info(f"Project LABELS {labels} \n")
+  logger.debug(f"Project LABELS {labels} \n")
   
   # Apply annotations to namespace
   try:
@@ -252,7 +252,7 @@ def create_limitrange(kopf,name,meta,spec,logger,api,filename):
   # get labels from parrent object 
   labels=meta['labels']
   
-  logger.info(f"Namespace {name} limitrange spec: {spec['limitrange']}\n")    
+  logger.debug(f"Namespace {name} limitrange spec: {spec['limitrange']}\n")    
       
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
@@ -295,7 +295,7 @@ def replace_limitrange(kopf,name,meta,spec,logger,api,filename):
   # get labels from parrent object 
   labels=meta['labels']
   
-  logger.info(f"Project {name} limitrange spec: {spec['limitrange']} \n")    
+  logger.debug(f"Project {name} limitrange spec: {spec['limitrange']} \n")    
   
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
@@ -345,35 +345,46 @@ def delete_limitrange(kopf,name,spec,logger,api):
 
 
 # create networkpolicy based on yaml manifest  
-def create_networkpolicy(kopf,name,spec,logger,api,filename):
+def create_networkpolicy(kopf,name,namespace,spec,logger,api,filename):
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
+  #logger.info(f" Network policy in namespace {namespace} file: {tmpl}")
   data = yaml.safe_load(tmpl)
-  kopf.adopt(data)
+  #logger.info(f" Network policy in namespace {namespace} file: {data}")
   try:
     obj = api.create_namespaced_network_policy(
-        namespace=name,
+        namespace=namespace,
         body=data,
       )
-    kopf.append_owner_reference(obj)
   except ApiException as e:
     logger.error("Exception when calling NetworkingV1Api->create_namespaced_network_policy: %s\n" % e)
 
 # replace networkpolicy based on yaml manifest  
-def replace_networkpolicy(kopf,name,spec,logger,api,filename,policyname):
+def replace_networkpolicy(kopf,name,namespace,logger,api,filename,policyname):
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
   data = yaml.safe_load(tmpl)
-  kopf.adopt(data)
   try:
     obj = api.replace_namespaced_network_policy(
         namespace=name,
         name=policyname,
         body=data,
       )
-    kopf.append_owner_reference(obj)
   except ApiException as e:
     logger.error("Exception when calling NetworkingV1Api->replace_namespaced_network_policy: %s\n" % e)
+
+
+def delete_networkpolicy(kopf,namespace,policyname,logger,api):
+        
+  try:
+    obj = api.delete_namespaced_network_policy(
+        namespace=namespace,
+        name=policyname
+      )
+    logger.debug(f"NetworkPolicy child is deleted: {obj}")
+  except ApiException as e:
+    logger.error("Exception when calling CoreV1Api->delete_namespaced_network_policy: %s\n" % e)
+
 
     
 # use env variable to control loop interval in seconds
@@ -464,8 +475,21 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
       logger.error("Exception when calling NetworkingV1Api->list_namespaced_network_policy: %s\n" % e)
   
   # create or update networkpolicy
+
+    try:
+        networkpolicylist = spec['networkpolicy']
+    except KeyError:
+        networkpolicylist = ['allow-all-in-namespace', 'allow-dns-access', 'default-deny-egress', 'default-deny-ingress']
+        logger.debug("matching all networkpolicies.")
+    logger.debug(f'Matching networkpolicy: {networkpolicylist}')
+    
+    
+    if networkpolicylist is None: 
+        networkpolicylist = ['allow-all-in-namespace', 'allow-dns-access', 'default-deny-egress', 'default-deny-ingress']
+
+    logger.info(f'Matching networkpolicy: {networkpolicylist}')
   
-      api = kubernetes.client.NetworkingV1Api()
+    api = kubernetes.client.NetworkingV1Api()
 
     try: 
       api_response = api.list_namespaced_network_policy(namespace=name) 
@@ -478,15 +502,25 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
       logger.error("Exception when calling NetworkingV1Api->list_namespaced_network_policy: %s\n" % e)
 
 
+   # update/patch networkpolicies
+   
+    for netpol in networkpolicylist:
+      try:    
+        policy_filename='networkpolicy/'+netpol+'.yaml' 
+        if netpol not in l_netpol:
+          create_networkpolicy(kopf=kopf,name=name,namespace=name,spec=spec,logger=logger,api=api,filename=policy_filename)
+        else:
+          replace_networkpolicy(kopf=kopf,name=name,namespace=name,logger=logger,api=api,filename=policy_filename,policyname=netpol)   
+      except:
+         logger.error(f"Cannot create/update networkpolicy {policy_filename} for {networkpolicylist}") 
+
+
 @kopf.on.delete('djkormo.github', 'v1alpha2', 'project')
 def delete_fn(spec, name, status, namespace, logger, **kwargs):
     logger.info(f"Deleting: {spec}")
     
-    # delete networkpolicy   TODO
     
-    logger.info(f"Deleting network policy: {name}")
-    
-    # delete resourcequota  TODO
+    # delete resourcequota 
     logger.info(f"Deleting resourcequota: {name}")
     
     api = kubernetes.client.CoreV1Api()
@@ -506,7 +540,7 @@ def delete_fn(spec, name, status, namespace, logger, **kwargs):
 
     
     
-    # delete limit range  TODO
+    # delete limit range 
     
     logger.info(f"Deleting limitrange: {name}")
     
@@ -525,3 +559,40 @@ def delete_fn(spec, name, status, namespace, logger, **kwargs):
 
     if name in l_limitrange:
       delete_limitrange(kopf=kopf,name=name,spec=spec,logger=logger,api=api)
+      
+    # delete network policy
+  
+    
+    api = kubernetes.client.NetworkingV1Api()
+
+    try:
+        networkpolicylist = spec['networkpolicy']
+    except KeyError:
+        networkpolicylist = ['allow-all-in-namespace', 'allow-dns-access', 'default-deny-egress', 'default-deny-ingress']
+        logger.debug("matching all networkpolicies.")
+    logger.debug(f'Matching networkpolicy: {networkpolicylist}')
+    
+  
+    if networkpolicylist is None: 
+        networkpolicylist = ['allow-all-in-namespace', 'allow-dns-access', 'default-deny-egress', 'default-deny-ingress']
+
+    try: 
+      api_response = api.list_namespaced_network_policy(namespace=name) 
+      l_netpol=[]
+      for i in api_response.items:
+        logger.debug("NetworkPolicy namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_netpol.append(i.metadata.name) 
+    except ApiException as e:
+      logger.error("Exception when calling NetworkingV1Api->list_namespaced_network_policy: %s\n" % e)
+      
+    # delete network policy  
+    for netpol in l_netpol:
+      if netpol in networkpolicylist:    
+        logger.info(f"Deleting network policy: {netpol}")    
+        delete_networkpolicy(kopf=kopf,namespace=name,logger=logger,api=api,policyname=netpol) 
+        
+        
+    
+      
+      

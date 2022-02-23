@@ -48,7 +48,7 @@ jobs:
     needs: validateHelmCharts
     runs-on: ubuntu-latest
     env:
-      APP_NAME: djkormo-shutdown-operator
+      APP_NAME: djkormo-project-operator
 
     steps:
     - uses: actions/checkout@v2

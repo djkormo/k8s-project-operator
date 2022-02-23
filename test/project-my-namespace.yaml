@@ -29,6 +29,7 @@ spec:
     resourcequotareplicationcontrollers: "97"
     resourcequotasecrets: "96"
     resourcequotaservicesloadbalancers: "102"
+  # limit range  
   limitrange:
     limitrangemaxcpu: 20000m
     limitrangemaxmem: "20Gi"
@@ -38,7 +39,12 @@ spec:
     limitrangedefaultmem : "1000Mi"
     limitrangedefaultrequestcpu: "100m"
     limitrangedefaultrequestmem: "100Mi"
-  networkpolicy: {}
-
+    # networkPolicy
+  networkpolicy:
+  #  - allow-all-in-namespace
+  #  - allow-dns-access
+  #  - default-deny-egress
+  #  - default-deny-ingress
+  # rbac, role, rolebinding
   rbac: {}
     
