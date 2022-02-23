@@ -28,13 +28,17 @@ rules:
 
   # Application: read-only access for watching cluster-wide.
   - apiGroups: [djkormo.github]
-    resources: [shutdowns,shutdowns/status]
+    resources: [projects,projects/status]
     verbs: [list, watch,patch]
-  # for controlling namespace  
+  # for controlling namespace  DO NOT DELETE NAMESPACE
   - apiGroups: [""]
     resources: [namespaces]
-    verbs: [list, watch,patch]
-  # for reading replicasets , deployments,statefulsets,daemonsets
-  - apiGroups: ["apps",""]
-    resources: [replicasets,deployments,deployments/scale,statefulsets,statefulsets/scale,daemonsets]
-    verbs: [get,list, watch,patch]
+    verbs: [list, watch,patch,create]
+  # for controlling resourcequotas and limitranges  
+  - apiGroups: [""]
+    resources: [resourcequotas,limitranges]
+    verbs: [list, watch,patch,create,delete,update]
+  # for controlling networkpolicy
+  - apiGroups: ["networking.k8s.io"]
+    resources: [networkpolicies]
+    verbs: [list, watch,patch,create,delete,update]
