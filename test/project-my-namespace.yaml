@@ -39,12 +39,12 @@ spec:
     limitrangedefaultmem : "1000Mi"
     limitrangedefaultrequestcpu: "100m"
     limitrangedefaultrequestmem: "100Mi"
-    # networkPolicy
+  # networkPolicy
   networkpolicy:
-  #  - allow-all-in-namespace
-  #  - allow-dns-access
-  #  - default-deny-egress
-  #  - default-deny-ingress
+    - allow-all-in-namespace
+    - allow-dns-access
+    - default-deny-egress
+    - default-deny-ingress
   # rbac, role, rolebinding
   rbac: {}
     
