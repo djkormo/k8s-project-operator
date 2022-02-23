@@ -29,7 +29,7 @@ helm uninstall project-operator  --namespace project-operator
 ```
 
 ```yaml
-**apiVersion: djkormo.github/v1alpha2
+apiVersion: djkormo.github/v1alpha2
 kind: Project
 metadata:
   name: my-namespace
@@ -77,5 +77,5 @@ spec:
     - default-deny-egress
     - default-deny-ingress
   # rbac, role, rolebinding
-  rbac: {}**
+  rbac: {}
 ```
