@@ -4,7 +4,9 @@
 
 replicaCount: 1
 
-installCRDs: true
+installCRDs: false
+installRoles: false
+installClusterRoles: false
 
 image:
   repository: djkormo/project-operator
@@ -18,7 +20,7 @@ fullnameOverride: "project-operator"
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
   annotations: { }
   # The name of the service account to use.
@@ -43,14 +45,35 @@ resources: #{ }
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
    limits:
-     cpu: "100m"
+     cpu: "200m"
      memory: "256Mi"
    requests:
      cpu: "50m"
      memory: "64Mi"
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
 
 nodeSelector: { }
 
 tolerations: [ ]
 
 affinity: { }
+
+
+configMap:
+  create: true
+  name: project-operator
+  env:
+    verbose: false
+    debug: false
+    namespace: project-operator
+    liveness: true
+    loop_interval: 60
+    excluded_namespaces : "kube-system,kube-public,kube-node-lease"

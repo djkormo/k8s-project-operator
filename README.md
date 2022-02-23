@@ -51,3 +51,21 @@ helm upgrade project-operator djkormo-project/project-operator \
 
 helm uninstall project-operator  --namespace project-operator 
 ```
+
+
+Testing locally
+
+```
+helm lint charts/project-operator
+
+helm template charts/project-operator -n project-operator --values charts/project-operator/values.yaml
+
+```
+
+
+```
+
+kubectl -n project-operator logs deploy/project-operator -f
+kubectl -n project-operator get events --sort-by=.metadata.creationTimestamp
+
+```

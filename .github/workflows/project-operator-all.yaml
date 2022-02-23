@@ -1,4 +1,4 @@
-name: shutdown operator pipeline
+name: project operator pipeline
 
 on:
   push:
