@@ -14,11 +14,13 @@ import asyncio
 
 @kopf.on.startup()
 async def startup_fn_simple(logger, **kwargs):
-    logger.info('Environment variables:')
-    for k, v in os.environ.items():
-        logger.info(f'{k}={v}')
+  logger.info('Environment variables:')
+  for k, v in os.environ.items():
+    logger.info(f'{k}={v}')
     logger.info('Starting in 5s...')
-    await asyncio.sleep(5)
+    # use env variable to control loop interval in seconds
+
+  await asyncio.sleep(5)
 
 # for Kubernetes probes
 
@@ -31,12 +33,30 @@ def get_random_value(**kwargs):
     return random.randint(0, 1_000_000)
 
 
+try:
+  LOOP_INTERVAL = int(os.environ['LOOP_INTERVAL'])
+except:
+  LOOP_INTERVAL=30
+  print(f"Variable LOOP_INTERVAL is not set, using {LOOP_INTERVAL}s as default")   
+    
+if LOOP_INTERVAL is None: 
+    LOOP_INTERVAL = 30
+        
+try:
+  EXCLUDED_NAMESPACES = os.environ['EXCLUDED_NAMESPACES']
+except:
+  EXCLUDED_NAMESPACES="kube-system,kube-public,kube-node-lease"
+  print(f"Variable EXCLUDED_NAMESPACES is not set, using {EXCLUDED_NAMESPACES} as default")    
+
+if EXCLUDED_NAMESPACES is None: 
+  EXCLUDED_NAMESPACES = "kube-system,kube-public,kube-node-lease"
+
+      
 # check if namespace should be under operator control
 
 def check_namespace(name,excluded_namespaces):
-  env = Env()
-  env.read_env()  # read .env file, if it exists
-  namespace_list = env.list(excluded_namespaces)
+      
+  namespace_list = list(excluded_namespaces)
   if name in namespace_list:
     print(f"Excluded namespace list: {namespace_list} ")    
     print(f"Excluded namespace found: {name}")
@@ -387,12 +407,7 @@ def delete_networkpolicy(kopf,namespace,policyname,logger,api):
 
 
     
-# use env variable to control loop interval in seconds
-try:
-  LOOP_INTERVAL = int(os.environ['LOOP_INTERVAL'])
-except:
-  LOOP_INTERVAL=30
-  print(f"Variable LOOP_INTERVAL is not set, using {LOOP_INTERVAL}s as default")    
+ 
 
 @kopf.on.resume('djkormo.github', 'v1alpha2', 'project')
 @kopf.on.create('djkormo.github', 'v1alpha2', 'project')
@@ -406,7 +421,7 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
 
     # check for excluded namespace
 
-    if check_namespace(name=namespace,excluded_namespaces='EXCLUDED_NAMESPACES'):
+    if check_namespace(name=namespace,excluded_namespaces=EXCLUDED_NAMESPACES):
       return {'project-operator-name': namespace} 
 
     try: 

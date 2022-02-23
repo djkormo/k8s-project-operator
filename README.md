@@ -1,9 +1,31 @@
+# Kubernetes-operator
+
+
 Kubernetes operator for maintaning 
 projects, 
 namespaces, 
 resourcequotas, 
 limitranges, 
 networkpolicies, RBAC permissions 
+
+
+
+```mermaid
+flowchart LR;
+    Project--create/update-->Namespace
+    Project--create/update/delete-->ResourceQuota
+    Project--create/update/delete-->LimitRange
+    Project--create/update/delete-->NetworkPolicy
+
+    NetworkPolicy-->allow-all-in-namespace
+    NetworkPolicy-->allow-dns-access
+    NetworkPolicy-->default-deny-egress
+    NetworkPolicy-->default-deny-ingress
+
+
+```
+
+
 
 Add release version as git tag
 ```
