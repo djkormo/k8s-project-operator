@@ -266,34 +266,40 @@ def delete_resourcequota(kopf,name,spec,logger,api):
 # create limitrange based on yaml manifest
 def create_limitrange(kopf,name,meta,spec,logger,api,filename):
       
-  # get annotations from parent object
-  annotations=meta['annotations']
+  try:    
+    # get annotations from parent object
+    annotations=meta['annotations']
   
-  # get labels from parrent object 
-  labels=meta['labels']
+    # get labels from parrent object 
+    labels=meta['labels']
   
-  logger.debug(f"Namespace {name} limitrange spec: {spec['limitrange']}\n")    
+    logger.debug(f"Namespace {name} limitrange spec: {spec['limitRange']}\n")    
+  except ApiException as e:
+    logger.error("Exception when getting information from parent Project: %s\n" % e)
+    return None  
+    
       
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
   
-  limitrangemaxcpu = spec['limitrange'].get('limitrangemaxcpu',"20000m")
-  limitrangemaxmem = spec['limitrange'].get('limitrangemaxmem',"30Gi")
-  limitrangemincpu = spec['limitrange'].get('limitrangemincpu',"50m")
-  limitrangeminmem = spec['limitrange'].get('limitrangeminmem',"50Mi")
-  limitrangedefaultcpu = spec['limitrange'].get('limitrangedefaultcpu',"1000m")
-  limitrangedefaultmem = spec['limitrange'].get('limitrangedefaultmem',"1000Mi")
-  limitrangedefaultrequestcpu = spec['limitrange'].get('limitrangedefaultrequestcpu',"100m")
-  limitrangedefaultrequestmem = spec['limitrange'].get('limitrangedefaultrequestmem',"100Mi")
+  maxcpu = spec['limitRange'].get('maxcpu',"20000m")
+  maxmem = spec['limitRange'].get('maxmem',"30Gi")
+  mincpu = spec['limitRange'].get('mincpu',"50m")
+  minmem = spec['limitRange'].get('minmem',"50Mi")
+  defaultcpu = spec['limitRange'].get('defaultcpu',"1000m")
+  defaultmem = spec['limitRange'].get('defaultmem',"1000Mi")
+  defaultrequestcpu = spec['limitRange'].get('defaultrequestcpu',"100m")
+  defaultrequestmem = spec['limitRange'].get('defaultrequestmem',"100Mi")
   
-  text = tmpl.format(name=name,limitrangemaxmem=limitrangemaxmem,
-           limitrangemaxcpu=limitrangemaxcpu, 
-           limitrangemincpu=limitrangemincpu,
-           limitrangeminmem=limitrangeminmem,
-           limitrangedefaultcpu=limitrangedefaultcpu,
-           limitrangedefaultmem=limitrangedefaultmem,
-           limitrangedefaultrequestcpu=limitrangedefaultrequestcpu,
-           limitrangedefaultrequestmem=limitrangedefaultrequestmem,
+  text = tmpl.format(name=name,
+          maxmem=maxmem,
+          maxcpu=maxcpu,
+          mincpu=mincpu,
+          minmem=minmem,
+          defaultcpu=defaultcpu,
+          defaultmem=defaultmem,
+          defaultrequestcpu=defaultrequestcpu,
+          defaultrequestmem=defaultrequestmem,
     )
 
   data = yaml.safe_load(text)
@@ -315,27 +321,27 @@ def replace_limitrange(kopf,name,meta,spec,logger,api,filename):
   # get labels from parrent object 
   labels=meta['labels']
   
-  logger.debug(f"Project {name} limitrange spec: {spec['limitrange']} \n")    
+  logger.debug(f"Project {name} limitrange spec: {spec['limitRange']} \n")    
   
   path = os.path.join(os.path.dirname(__file__), filename)
   tmpl = open(path, 'rt').read()
-  limitrangemaxcpu = spec['limitrange'].get('limitrangemaxcpu',"20000m")
-  limitrangemaxmem = spec['limitrange'].get('limitrangemaxmem',"30Gi")
-  limitrangemincpu = spec['limitrange'].get('limitrangemincpu',"50m")
-  limitrangeminmem = spec['limitrange'].get('limitrangeminmem',"50Mi")
-  limitrangedefaultcpu = spec['limitrange'].get('limitrangedefaultcpu',"1000m")
-  limitrangedefaultmem = spec['limitrange'].get('limitrangedefaultmem',"1000Mi")
-  limitrangedefaultrequestcpu = spec['limitrange'].get('limitrangedefaultrequestcpu',"100m")
-  limitrangedefaultrequestmem = spec['limitrange'].get('limitrangedefaultrequestmem',"100Mi")
+  maxcpu = spec['limitRange'].get('maxcpu',"20000m")
+  maxmem = spec['limitRange'].get('maxmem',"30Gi")
+  mincpu = spec['limitRange'].get('mincpu',"50m")
+  minmem = spec['limitRange'].get('minmem',"50Mi")
+  defaultcpu = spec['limitRange'].get('defaultcpu',"1000m")
+  defaultmem = spec['limitRange'].get('defaultmem',"1000Mi")
+  defaultrequestcpu = spec['limitRange'].get('defaultrequestcpu',"100m")
+  defaultrequestmem = spec['limitRange'].get('defaultrequestmem',"100Mi")
 
-  text = tmpl.format(name=name,limitrangemaxmem=limitrangemaxmem,
-           limitrangemaxcpu=limitrangemaxcpu, 
-           limitrangemincpu=limitrangemincpu,
-           limitrangeminmem=limitrangeminmem,
-           limitrangedefaultcpu=limitrangedefaultcpu,
-           limitrangedefaultmem=limitrangedefaultmem,
-           limitrangedefaultrequestcpu=limitrangedefaultrequestcpu,
-           limitrangedefaultrequestmem=limitrangedefaultrequestmem,
+  text = tmpl.format(name=name,maxmem=maxmem,
+           maxcpu=maxcpu,
+           mincpu=mincpu,
+           minmem=minmem,
+           defaultcpu=defaultcpu,
+           defaultmem=defaultmem,
+           defaultrequestcpu=defaultrequestcpu,
+           defaultrequestmem=defaultrequestmem,
     )
 
   data = yaml.safe_load(text)
@@ -492,7 +498,7 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
   # create or update networkpolicy
 
     try:
-        networkpolicylist = spec['networkpolicy']
+        networkpolicylist = spec['networkPolicy']
     except KeyError:
         networkpolicylist = ['allow-all-in-namespace', 'allow-dns-access', 'default-deny-egress', 'default-deny-ingress']
         logger.debug("matching all networkpolicies.")
@@ -528,6 +534,35 @@ def check_object_on_loop(spec, name, status, namespace,meta, logger, **kwargs):
           replace_networkpolicy(kopf=kopf,name=name,namespace=name,logger=logger,api=api,filename=policy_filename,policyname=netpol)   
       except:
          logger.error(f"Cannot create/update networkpolicy {policy_filename} for {networkpolicylist}") 
+
+
+  # create or update rolebinding or clusterrolebinding 
+  
+    logger.info(f'Checking RBAC roles in namespace {name}')
+  
+    api = kubernetes.client.RbacAuthorizationV1Api()
+    
+    try: 
+      api_response = api.list_namespaced_role_binding(namespace=name) 
+      l_rolebinding=[]
+      for i in api_response.items:
+        logger.debug("RoleBinding namespace: %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_rolebinding.append(i.metadata.name) 
+    except ApiException as e:
+      logger.error("Exception when calling RbacAuthorizationV1Api->list_namespaced_role_binding: %s\n" % e)
+
+
+    logger.info(f'Checking RBAC cluster roles ')
+    try: 
+      api_response = api.list_cluster_role_binding() 
+      l_clusterrolebinding=[]
+      for i in api_response.items:
+        logger.debug("ClusterRoleBinding : %s\t name: %s" %
+          (i.metadata.namespace, i.metadata.name))
+        l_clusterrolebinding.append(i.metadata.name) 
+    except ApiException as e:
+      logger.error("Exception when calling RbacAuthorizationV1Api->list_cluster_role_binding: %s\n" % e)
 
 
 @kopf.on.delete('djkormo.github', 'v1alpha2', 'project')
@@ -581,7 +616,7 @@ def delete_fn(spec, name, status, namespace, logger, **kwargs):
     api = kubernetes.client.NetworkingV1Api()
 
     try:
-        networkpolicylist = spec['networkpolicy']
+        networkpolicylist = spec['networkPolicy']
     except KeyError:
         networkpolicylist = ['allow-all-in-namespace', 'allow-dns-access', 'default-deny-egress', 'default-deny-ingress']
         logger.debug("matching all networkpolicies.")

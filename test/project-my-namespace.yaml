@@ -30,21 +30,37 @@ spec:
     resourcequotasecrets: "96"
     resourcequotaservicesloadbalancers: "102"
   # limit range  
-  limitrange:
-    limitrangemaxcpu: 20000m
-    limitrangemaxmem: "20Gi"
-    limitrangemincpu: "50m"
-    limitrangeminmem: "50Mi"
-    limitrangedefaultcpu: "1000m"
-    limitrangedefaultmem : "1000Mi"
-    limitrangedefaultrequestcpu: "100m"
-    limitrangedefaultrequestmem: "100Mi"
+  limitRange:
+    maxcpu: 20000m
+    maxmem: "20Gi"
+    mincpu: "50m"
+    minmem: "50Mi"
+    defaultcpu: "1000m"
+    defaultmem : "1000Mi"
+    defaultrequestcpu: "100m"
+    defaultrequestmem: "100Mi"
   # networkPolicy
-  networkpolicy:
+  networkPolicy:
     - allow-all-in-namespace
     - allow-dns-access
     - default-deny-egress
     - default-deny-ingress
   # rbac, role, rolebinding
-  rbac: {}
+  rbacBindings:
+  - name: cluster-admins
+    subjects:
+      - kind: User
+        name: sue@example.com
+      - kind: Group
+        name: group.com
+      - kind: ServiceAccount
+        name: project-admin
+    clusterRoleBindings:
+      - clusterRole: view
+    roleBindings: 
+      - role: project-admin
+  # source namespace for networkpolicies, roles 
+  sourceNamespace: 
+    name: default
+    firstChosen: "true"   
     

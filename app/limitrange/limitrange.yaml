@@ -6,15 +6,15 @@ metadata:
 spec:
   limits:
   - max:
-      memory: "{limitrangemaxmem}"
-      cpu: "{limitrangemaxcpu}"
+      memory: "{maxmem}"
+      cpu: "{maxcpu}"
     min:
-      cpu: "{limitrangemincpu}"
-      memory: "{limitrangeminmem}"
+      cpu: "{mincpu}"
+      memory: "{minmem}"
     default:
-      cpu: "{limitrangedefaultcpu}"
-      memory: "{limitrangedefaultmem}"
+      cpu: "{defaultcpu}"
+      memory: "{defaultmem}"
     defaultRequest:
-      cpu: "{limitrangedefaultrequestcpu}"
-      memory: "{limitrangedefaultrequestmem}"
+      cpu: "{defaultrequestcpu}"
+      memory: "{defaultrequestmem}"
     type: Container

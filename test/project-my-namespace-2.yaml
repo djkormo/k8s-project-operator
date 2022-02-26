@@ -30,8 +30,8 @@ spec:
     resourcequotasecrets: "96"
     resourcequotaservicesloadbalancers: "102"
   # limit range
-  limitrange: {}
+  limitRange: {}
   # network policy list
-  networkpolicy: {}
+  networkPolicy: {}
   # rbac permissions
-  rbac: {}
+  rbacBindings: {}
