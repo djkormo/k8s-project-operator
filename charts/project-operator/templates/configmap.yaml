@@ -10,5 +10,5 @@ data:
   NAMESPACE: {{ .Values.configMap.env.namespace | default "default" | quote }}
   LIVENESS: {{ .Values.configMap.env.liveness | default true }}
   LOOP_INTERVAL: {{ .Values.configMap.env.loop_interval | default 60 }}
-  EXCLUDED_NAMESPACES : {{ .Values.configMap.env.excluded_namespaces | default "kube-system,kube-public,kube-node-lease" | quote }}
+  EXCLUDED_NAMESPACES: {{ .Values.configMap.env.excluded_namespaces | default "kube-system,kube-public,kube-node-lease" | quote }}
 {{- end }} 
