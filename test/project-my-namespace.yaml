@@ -39,28 +39,5 @@ spec:
     defaultmem : "1000Mi"
     defaultrequestcpu: "100m"
     defaultrequestmem: "100Mi"
-  # networkPolicy
-  networkPolicy:
-    - allow-all-in-namespace
-    - allow-dns-access
-    - default-deny-egress
-    - default-deny-ingress
-  # rbac, role, rolebinding
-  rbacBindings:
-  - name: cluster-admins
-    subjects:
-      - kind: User
-        name: sue@example.com
-      - kind: Group
-        name: group.com
-      - kind: ServiceAccount
-        name: project-admin
-    clusterRoleBindings:
-      - clusterRole: view
-    roleBindings: 
-      - role: project-admin
-  # source namespace for networkpolicies, roles 
-  sourceNamespace: 
-    name: default
-    firstChosen: "true"   
-    
+
+

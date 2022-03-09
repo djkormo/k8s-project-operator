@@ -2,7 +2,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: project-reader
+  name: project-admin
   namespace: {namespace}
 rules:
   - apiGroups:
@@ -15,7 +15,6 @@ rules:
       - rbac.authorization.k8s.io
       - networking.k8s.io
       - storage.k8s.io
-      - metrics.k8s.io
     resources:
       - componentstatuses
       - configmaps
@@ -26,10 +25,8 @@ rules:
       - horizontalpodautoscalers
       - ingress
       - jobs
-      - cronjobs
       - limitranges
       - namespaces
-      - networkpolicies
       - nodes
       - pods
       - pods/log
@@ -41,4 +38,4 @@ rules:
       - replicationcontrollers
       - serviceaccounts
       - services
-    verbs: ["watch", "get", "list"]
+    verbs: ["*"]

@@ -31,7 +31,3 @@ spec:
     resourcequotaservicesloadbalancers: "102"
   # limit range
   limitRange: {}
-  # network policy list
-  networkPolicy: {}
-  # rbac permissions
-  rbacBindings: {}

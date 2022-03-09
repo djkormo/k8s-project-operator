@@ -1,0 +1,48 @@
+apiVersion: djkormo.github/v1alpha2
+kind: ProjectRBAC
+metadata:
+  name: my-namespace
+  namespace: project-operator
+  # sample labels
+  labels:
+    owner: "djkormo"
+    type: "operator"
+    env: "kubernetes"
+    name: "project"
+  # sample annotations 
+  annotations:
+    project-operator/multiline.pattern: "test-paterrn"
+    project-operator/multiline.name: "test-name"
+spec:
+ # rbac, role, rolebinding
+  rbacBindings:
+  - name: project-admins
+    subjects:
+    - kind: User
+      name: admin@my-namespace.com
+    - kind: Group
+      name: admin.my-namespace.com
+    - kind: ServiceAccount 
+      name: project-admin # to install if missing
+    clusterRoleBindings:
+    - clusterRole: view # installed on k8s 
+    roleBindings: 
+    - role: project-admin # to install if missing
+
+  - name: project-reader
+    subjects:
+    - kind: User
+      name: reader@my-namespace.com
+    - kind: Group
+      name: reader.my-namespace.com
+    - kind: ServiceAccount 
+      name: project-reader # to install if missing
+    clusterRoleBindings:
+    - clusterRole: view # installed on k8s 
+    roleBindings: 
+    - role: project-admin # to install if missing  
+  # source namespace for roles
+  sourceNamespace: 
+    name: default
+    firstChosen: "false"   
+    

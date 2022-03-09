@@ -44,4 +44,9 @@ rules:
     resources: [networkpolicies]
     verbs: [list, watch,patch,create,delete,update]
 
+  # for serviceaccount, role, clusterrole,rolebinding,clusterrolebindings
+  - apiGroups: [""]
+    resources: [serviceaccounts,roles,rolebindings,clusterroles,clusterrolebindings]
+    verbs: [list, watch,patch,create,delete,update]
+
 {{- end }}

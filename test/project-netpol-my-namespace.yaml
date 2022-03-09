@@ -1,0 +1,28 @@
+apiVersion: djkormo.github/v1alpha2
+kind: ProjectNetworkPolicy
+metadata:
+  name: my-namespace
+  namespace: project-operator
+  # sample labels
+  labels:
+    owner: "djkormo"
+    type: "operator"
+    env: "kubernetes"
+    name: "project"
+  # sample annotations 
+  annotations:
+    project-operator/multiline.pattern: "test-paterrn"
+    project-operator/multiline.name: "test-name"
+spec:
+  # networkPolicy
+  networkPolicyList:
+    - allow-all-in-namespace # embedded
+    - allow-dns-access # embedded
+    - default-deny-egress  # embedded
+    - default-deny-ingress #embedded 
+    - non-existing # external from source namespace
+  # source namespace for network policies
+  sourceNamespace: 
+    name: default
+    firstChosen: "true"  # if true-> clone from source namespace else use embedded manifests   
+    

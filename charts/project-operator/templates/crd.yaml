@@ -10,6 +10,8 @@ spec:
     listKind: ProjectList
     plural: projects
     singular: project
+    shortNames:
+      - pr
   scope: Namespaced
   versions:
   - name: v1alpha2
@@ -21,4 +23,54 @@ spec:
     storage: true
     subresources:
       status: {}
-  {{- end}}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: projectnetworkpolicies.djkormo.github
+spec:
+  group: djkormo.github
+  names:
+    kind: ProjectNetworkPolicy
+    listKind: ProjectNetworkPolicyList
+    plural: projectnetworkpolicies
+    singular: projectnetworkpolicy
+    shortNames:
+      - prnetpol
+  scope: Namespaced
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    served: true
+    storage: true
+    subresources:
+      status: {} 
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: projectrbacs.djkormo.github
+spec:
+  group: djkormo.github
+  names:
+    kind: ProjectRBAC
+    listKind: ProjectRBACList
+    plural: projectrbacs
+    singular: projectrbac
+    shortNames:
+      - prrbac
+  scope: Namespaced
+  versions:
+  - name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+    served: true
+    storage: true
+    subresources:
+      status: {}           
+{{- end}}

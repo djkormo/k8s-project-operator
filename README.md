@@ -29,7 +29,7 @@ flowchart LR;
 
 Add release version as git tag
 ```
-git tag 0.0.3
+git tag 0.0.6
 git push origin --tags
 ```
 
