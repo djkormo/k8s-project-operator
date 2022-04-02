@@ -1,7 +1,7 @@
 FROM python:3.7.12-alpine
 
 RUN apk --no-cache add  gcc musl-dev curl bash
-RUN apk --no-cache add --update expat=2.4.5-r0  libretls=3.3.4-r3  libssl1.1=1.1.1n-r0 
+RUN apk --no-cache add --update expat=2.4.5-r0  libretls=3.3.4-r3  libssl1.1=1.1.1n-r0 libcrypto1.1=1.1.1n-r0  zlib=1.2.12-r0 
 
 
 RUN pip install --upgrade pip
