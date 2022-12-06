@@ -13,7 +13,6 @@ import random
 import asyncio
 
 
-
 @kopf.on.startup()
 async def startup_fn_simple(logger, **kwargs):
   logger.info('Environment variables:')
